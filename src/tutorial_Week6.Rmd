@@ -1,0 +1,123 @@
+---
+title: "R Tutorial Week 6"
+author: "Tolentino Alexandra Morales"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed : false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+# Question 1
+## Question 1.1
+```{r}
+qns1_1 = read.csv('../data/yrbss.csv') %>%
+  na.omit() %>%
+  distinct() %>%
+  rename(id = record, weight_kg = stweight) %>%
+  mutate_at('grade', function(x) as.numeric(gsub('th', '', x)))
+
+head(qns1_1)
+
+```
+
+### Question 1.2
+```{r}
+f_BMI_less15 = qns1_1 %>%
+  filter(sex == 'Female', bmi < 15) %>%
+  select(-sex, -race7)
+qns1_2 = f_BMI_less15 %>%
+  mutate(height_m = bmi * weight_kg)
+
+head(qns1_2)
+```
+
+## Question 2
+### Question 2.1
+```{r}
+qns2_1 = read_xls('../data/MSPUS.xls', skip = 11, col_names = c('date', 'price'), col_types = c('date', 'numeric'))
+```
+
+### Question 2.2
+Using Base R
+```{r}
+dates = qns2_1$date
+prices = qns2_1$price
+
+plot(dates,prices, 
+     main = 'Median Sales Price of Houses sold for the United States',
+     xlab = '', 
+     ylab = '', 
+     type = 'l', 
+     las = 1,
+     lwd = 3, 
+     cex.axis = 0.8)
+
+#options(scipen = 999) to turn off scientific notation
+```
+
+### Question 2.3
+```{r} 
+qns2_3 = qns2_1 %>%
+  filter(date < '2023-11-01' & date > '2015-01-01') %>% #Till 2023-11-01 because need to include October
+  mutate(year = format(date,'%Y'), quarter = quarters(date)) 
+```
+
+### Question 2.4
+```{r}
+plot(qns2_3$date, qns2_3$price, 
+     xlab = 'Source: U.S. Census Bureau; Department of Housing and Urban Development', 
+     ylab = '', 
+     main = 'Median Housing Prices, 2015-2023', 
+     las = 1, 
+     type = 'o', 
+     pch = 16,
+     cex.lab = 0.9, cex.axis = 0.9, cex = 0.9)
+```
+
+
+
+## Question 3
+```{r}
+library(nycflights13)
+
+flights = nycflights13::flights
+```
+
+### Question 3.1
+```{r}
+flights %>% filter(month == 6) %>%
+  count(dest) %>%
+  slice_max(n, n=1)
+
+```
+### Question 3.2
+
+```{r}
+flights %>% count(carrier, wt = mean(distance)) %>%
+  slice_max(n, n=1)
+#or
+#flights %>% group_by(carrier) %>% summarize(average = mean(distance)) %>% arrange(desc(average))
+```
+### Question 3.3
+```{r}
+flights %>% mutate(average_speed = distance / air_time) %>%
+  slice_max(average_speed, n=1) %>% 
+  select(carrier, flight)
+```
+
+### Question 3.4
+```{r}
+#Wrong
+flights %>% mutate(day = (day %% 7) +1) %>%
+  group_by(day) %>%
+  summarize(total = n()) %>% 
+  slice_max(total, n=1)
+  
+```
+

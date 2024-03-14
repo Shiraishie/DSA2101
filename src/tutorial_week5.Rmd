@@ -1,0 +1,72 @@
+---
+title: "DSA2101 Week 5 Tutorial"
+author: "Alexandra"
+date: "2024-02-09"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapse: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+```
+## Question 1
+
+```{r}
+qns1_1 = read_excel("../data/tourist.xlsx", range = 'A10:G26')
+
+```
+
+```{r Data Cleaning}
+
+qns1_2 = qns1_1[-12, ]
+qns1_2
+
+#print(sum(nov))
+```
+
+
+```{r plot}
+#Qns 1.3
+
+#Labels
+declabels = qns1_2$`Data Series`[2:14]
+declabels[1] = 0
+declabels[13] = '60+'
+for (i in 2:12){
+  declabels[i] = gsub(' Day \\(Number)', '', declabels[i])
+  declabels[i] = gsub(' Days \\(Number)','', declabels[i])
+}
+###
+#December only
+december = qns1_2$`2022 Dec`
+
+probability = december[2:(length(december)-1)] / december[1]
+#las = 1 makes the chart change
+barplot(probability, names.arg =declabels,main = 'Tourists\' Length of Stay, Dec 2022', xlab = 'Number of days', ylab = 'Percentage of Arrivals', las = 2, cex.axis = 1, cex.names = 0.95)
+```
+
+## Question 2
+```{r}
+yrbss = read.csv("../data/yrbss.csv")
+yrbss = na.omit(yrbss)
+yrbss = yrbss[!duplicated(yrbss),] #no duplicates.
+#Can use unique function to keep non-duplicates
+
+colnames(yrbss)[c(1,8)] = c('id', 'weight_kg')
+
+yrbss$grade = sapply(yrbss$grade, function(x) as.numeric(gsub('th', '', x)))
+#or yrbss$grade = as.numeric(gsub('th','', yrbss$grade))
+#str(yrbss)
+```
+```{r}
+fbmi = yrbss[yrbss$sex == 'Female' & yrbss$bmi < 15, ]
+#qns2_2 = data.frame(id = fbmi$id, age = fbmi$age, race4 = fbmi$race4, weight_kg = fbmi$weight_kg, bmi = fbmi$bmi)
+qns2_2 = fbmi[ , c('id', 'age', 'race4', 'weight_kg', 'bmi')]
+qns2_2$height_m = sqrt(qns2_2$weight_kg / (qns2_2$bmi))
+head(qns2_2)
+```
+

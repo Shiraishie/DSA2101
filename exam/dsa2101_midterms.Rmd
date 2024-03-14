@@ -1,0 +1,78 @@
+---
+title: "DSA2101 Midterms"
+author: ""
+date: "2024-03-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(readxl)
+```
+
+
+## Question 1
+
+### 1.1
+```{r}
+xl = read_excel('../data/qn1.xlsx')
+xl2 = read_excel('../data/qn1.xlsx', sheet = 2)
+qn1_1 = xl %>% left_join(xl2, by = c('epi_week' = 'week'))
+qn1_1 = qn1_1 %>% pivot_wider(names_from = 'new_admission_type', values_from = 'count')
+str(qn1_1)
+
+```
+### 1.2
+```{r}
+plot(qn1_1$date, qn1_1$Hospitalised, type = 'l', lwd = 3, col = 'darkcyan', ylab = 'Number of Cases', las = 1, xlab = '',
+     main = 'Covid-19 Weekly Statistics in Singapore')
+lines(qn1_1$date, qn1_1$ICU, type = 'l', lwd = 3, col = 'gray')
+legend('topleft', legend = c('Hospitalisations', 'ICU Admissions'), lty = 1, lwd = 2, col = c('darkcyan','gray'))
+
+```
+
+### 1.3
+```{r}
+qn1_3 = qn1_1 %>% mutate(prevCount = lag(Count,1)) %>%
+  mutate(weekly_growth = round((100*(Count-prevCount)/prevCount),2)) %>%
+  select(-c(4:6))
+qn1_3 = qn1_3[-1,]
+head(qn1_3,6)
+```
+
+
+
+## Question 2
+### 2.1
+```{r}
+qn2_1 = read_csv('../data/qn2.csv')
+qn2_1 = qn2_1 %>% mutate(month = ym(month),town = factor(town), flat_type = factor(flat_type))
+glimpse(qn2_1)
+```
+
+########## fix
+### 2.2
+```{r}
+qn2_2 = qn2_1 %>% filter(month == '2024-01-01') %>%
+  count(town, wt = median(resale_price/floor_area_sqm)) %>% ungroup() %>%
+  slice_max(n, n=3) %>%
+  mutate(n = round(n,2))
+```
+
+### 2.3
+```{r}
+dat = qn2_1 %>% filter(month >= '2023-01-01' & month <= '2023-12-01')
+dat2 = dat %>% count(month)
+dat3 = dat %>% count() %>% mutate(n = n/12)
+names = c('Jan','Feb','Mar', 'Apr', 'May', 'Jun', 'Jul','Aug','Sep','Oct','Nov','Dec')
+dat4 = dat2 %>% mutate(avg = dat3$n)
+
+
+barplot(dat2$n, names.arg = c('Jan','Feb','Mar', 'Apr', 'May', 'Jun', 'Jul','Aug','Sep','Oct','Nov','Dec'), border = FALSE,
+        col = 'steelblue', las = 1, main = 'Number of HDB resale transactions in 2023',)
+#lines(dat4$month, dat4$n, col = 'gray', lwd = 3)
+```
+

@@ -1,0 +1,53 @@
+library(stringr)
+#install.packages('lubridate')
+library(lubridate)
+```
+
+## Question 1
+### Question 1.1
+
+
+
+
+df = read.csv("../data/Shanghai.csv")
+months = as.integer(levels(factor(df$Month)));
+avg_temp = NULL
+
+for (month in months){
+  mean_month_temp = round(mean(df[df$Month == month,]$Temp),2);
+  avg_temp = rbind(avg_temp,c(month,mean_month_temp))
+}
+
+View(avg_temp)
+
+
+
+### Question 1.2
+#Answer question 1.2 here.
+
+
+
+df$yr_month = str_c(df$Year, df$Month, sep = '-');
+
+
+
+## Question 1.3
+
+
+df$yr_month = ym(df$yr_month)
+df
+
+
+
+## Question 2
+
+
+#Use Base R Syntax
+
+newdf = df[year(df$yr_month) == 2012,];
+
+month_test = c('Jan', 'Apr', 'Jul', 'Oct')
+
+plot(newdf$Month, newdf$Temp, main = 'Monthly temperature in Shanghai 2012', xlab = 'Month', ylab = 'Temperature (degrees C)', pch = 19, type = 'b', xaxt = 'n')
+
+axis(side = 1, at = c(1,4,7,10), labels = month_test)

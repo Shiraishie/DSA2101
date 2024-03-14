@@ -1,0 +1,60 @@
+---
+title: "Flights Week 5 DSA2101"
+author: "Alex"
+date: "2024-02-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nycflights13)
+
+```
+
+```{r}
+data(flights)
+flights
+```
+
+
+```{r}
+flights %>% filter(day == 7, month == 2)
+```
+```{r}
+#Flights delayed by >2 hours both either arrival or departure
+flights %>% filter(dep_delay > 120 | arr_delay > 120)
+#?flights to check that its in minutes
+
+flights %>%filter(month %in% c(7:9))
+
+flights %>% filter(is.na(dep_time))
+```
+```{r}
+flights %>% select_if(is.numeric)
+df6 = flights %>%
+  filter(origin == 'JFK' ) %>%
+  select(year:day, ends_with('delay'), distance, dep_time)
+df6 %>% mutate(hour = dep_time %/% 100, minute = dep_time %% 100)
+
+## %/% keeps integer and %% keeps remainder in division
+
+```
+
+```{r}
+flights %>% mutate(arr_status = ifelse(is.na(arr_delay), 'cancelled', ifelse(arr_delay < 0, 'on time', 'late' ))) %>%
+  count(arr_status)
+## OR WE CAN USE case_when
+flights %>% mutate(arr_status = case_when(
+  is.na(arr_delay) ~ 'cancelled', 
+  arr_delay < 0 ~ 'on time', 
+  arr_delay > 0 ~ 'late')) %>%
+  count(arr_status)
+
+```
+```{r}
+z = flights$distance > 1600
+flights[flights['distance'] > 1500 , ]
+flights['distance' > 1500]
+```
+

@@ -1,0 +1,143 @@
+---
+title: "dsa2101 week 7 tutorial rmd"
+author: "Alex"
+date: "2024-03-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library, include = FALSE}
+library(dplyr)
+library(readxl)
+library(tidyverse)
+library(nberwp)
+library(stringr)
+```
+
+## Question  1
+
+### Question 1.1
+```{r tidyformat}
+qn1_1 = read_excel('../data/tourist.xlsx', range = 'A10:G26')
+qn1_1 = qn1_1[-c(1,12,16), ]
+qn1_1 = qn1_1 %>% mutate(k = c(1:13), .before = 1) #Adding k before doing pivot
+
+#Levels of the month in order
+orderedMonths = c('Jul','Aug','Sep', 'Oct', 'Nov', 'Dec')
+
+qn1_1 = qn1_1 %>% pivot_longer(3:8, names_to = c('year','month'), names_sep = ' ', values_to = 'arrivals') %>% 
+  mutate(year = as.integer(year), month = factor(month, levels = orderedMonths, ordered = TRUE)) %>%
+  arrange(month, .by_group = TRUE)
+
+head(qn1_1)
+```
+
+
+### Question 1.2
+```{r}
+qn1_2 = qn1_1 %>% mutate(prevValue = lag(arrivals, n = 13), mom_change = round(100*(arrivals-prevValue)/ prevValue, 1)) %>%
+  select(-prevValue) %>%
+  na.omit()
+
+head(qn1_2, 2)
+```
+
+
+## Question 2
+
+### Question 2.1
+```{r include = FALSE}
+papers <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-09-28/papers.csv')
+authors <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-09-28/authors.csv')
+programs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-09-28/programs.csv')
+paper_authors <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-09-28/paper_authors.csv')
+paper_programs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-09-28/paper_programs.csv')
+
+joined_df <- left_join(papers, paper_authors) %>% 
+  left_join(authors) %>% 
+  left_join(paper_programs) %>% 
+  left_join(programs)%>% 
+  mutate(
+    catalogue_group = str_sub(paper, 1, 1),
+    catalogue_group = case_when(
+      catalogue_group == "h" ~ "Historical",
+      catalogue_group == "t" ~ "Technical",
+      catalogue_group == "w" ~ "General"
+    ),
+    .after = paper
+  )
+
+```
+
+
+### Question 2.2
+```{r Making Dataframe}
+df = papers %>% left_join(paper_programs, by = 'paper') %>% 
+  left_join(programs, by = 'program') %>%
+  filter(program_category == 'Finance')
+
+```
+
+
+
+```{r}
+#Subcategory refers to program_desc
+
+#other way
+df %>% group_by(year, program_desc, program_category) %>%
+  count()
+
+#One way to do it
+qn2_2 = df %>% count(year, program_desc, program_category)
+  
+glimpse(qn2_2)
+
+```
+
+### Question 2.3
+```{r echo = FALSE}
+#only 2 categories -- can check from programs dataset
+newData = qn2_2 %>% pivot_wider(names_from = program_desc, values_from = n, values_fill = 0)
+
+
+plot(newData$year, newData$`Corporate Finance`,type = 'l', lwd = 3, col = 'maroon', 
+     main = 'Number of Finance papers from 1978 to present',
+     xlab = 'Year',
+     ylab = 'Number of paper')
+
+lines(newData$year, newData$`Asset Pricing`, type = 'l', lwd = 3, col = 'gray')
+legend('topleft', legend = c('Corporate Finance', 'Asset Pricing'), 
+       col = c('maroon', 'gray'),
+       lty = c(1,1))
+
+```
+
+
+
+### Question 2.4
+```{r}
+
+qn2_4 = paper_authors %>% left_join(authors, by = 'author') %>%
+  left_join(papers, by = 'paper') %>%
+  select(-c(2,4,5,7))
+
+```
+
+
+### Question 2.5
+```{r}
+
+qn2_5 = qn2_4 %>% mutate(decade = paste0( floor(year/10) * 10,'s'), .after = name) %>%
+  select(-c(year))
+
+qn2_5 %>% count(decade, paper) %>%
+  count(decade, wt = mean(n)) %>%
+  rename(avg_n_authors = n,2) %>%
+  mutate(decade = as.factor(decade), avg_n_authors = round(avg_n_authors,2))
+
+```
+
+
